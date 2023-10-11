@@ -3,10 +3,13 @@ namespace ConsumerService
 {
     public class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
             IConfiguration configuration = GetConfiguration();
-
+            string hostName = "localhost";
+            string queueName = "StatMessages";
+            var messageConsumer = new ConsumeMessages(configuration, hostName, queueName);
+            await messageConsumer.StartConsumingAsync();
         }
 
         static IConfiguration GetConfiguration()

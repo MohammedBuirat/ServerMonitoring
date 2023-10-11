@@ -65,7 +65,7 @@ namespace ServerStatisticsCollectionService
         {
             using (PerformanceCounter cpuCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total"))
             {
-                cpuCounter.NextValue(); 
+                cpuCounter.NextValue();
                 System.Threading.Thread.Sleep(1000);
                 double cpuUsage = cpuCounter.NextValue();
 
