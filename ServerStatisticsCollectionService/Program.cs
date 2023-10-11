@@ -11,6 +11,7 @@ namespace ServerStatisticsCollectionService
             string queueName = "StatMessages";
             IMessageQueue messageQueue = new RabbitMQMessageQueue(hostName, queueName);
             var statCollectionSertvice = new ServerStatCollecting(configuration, messageQueue);
+            await statCollectionSertvice.StartCollectingStatisticsAsync();
         }
 
         static IConfiguration GetConfiguration()

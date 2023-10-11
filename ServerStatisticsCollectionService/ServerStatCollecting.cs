@@ -18,6 +18,7 @@ namespace ServerStatisticsCollectionService
         {
             _messageQueue = iMessageQueue;
             _configuration = configuration;
+            _parser = new Parsers();
         }
 
         public async Task StartCollectingStatisticsAsync()

@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ServerMonitoring.Entities
+namespace ServerStatisticsCollectionService.Entities
 {
     public class ServerStatistics
     {
