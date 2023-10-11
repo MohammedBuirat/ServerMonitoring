@@ -9,12 +9,10 @@ using System.Threading.Tasks;
 
 namespace ServerStatisticsCollectionService.Parser
 {
-    public class Parser
+    public class Parsers
     {
-        public string ServerStatisticsToJson(ServerStatistics serverStatistics)
+        public string ServerStatisticsToJson(ServerStatistics serverStatistics, string serverIdentifier)
         {
-            var serverStatisticsConfigSection = _configuration.GetSection("ServerStatisticsConfig");
-            string serverIdentifier = serverStatisticsConfigSection["ServerIdentifier"];
             string serverStatisticsJson = JsonConvert.SerializeObject(serverStatistics);
             var jsonData = new JObject();
             jsonData[serverIdentifier] = JToken.Parse(serverStatisticsJson);
