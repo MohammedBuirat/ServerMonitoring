@@ -6,6 +6,7 @@ using Newtonsoft.Json;
 using ServerStatisticsCollectionService.MessageQueues;
 using System.Diagnostics;
 using ServerStatisticsCollectionService.Parser;
+using ConsumerService;
 
 namespace ServerStatisticsCollectionService
 {
@@ -14,17 +15,19 @@ namespace ServerStatisticsCollectionService
         private readonly IConfiguration _configuration;
         private readonly IMessageQueue _messageQueue;
         private readonly Parsers _parser;
-        public ServerStatCollecting(IConfiguration configuration, IMessageQueue iMessageQueue)
+        private readonly GetEnvironmentVariable _environmentVariableProvider;
+
+        public ServerStatCollecting(IConfiguration configuration, IMessageQueue messageQueue, GetEnvironmentVariable environmentVariableProvider)
         {
-            _messageQueue = iMessageQueue;
             _configuration = configuration;
+            _messageQueue = messageQueue;
             _parser = new Parsers();
+            _environmentVariableProvider = environmentVariableProvider;
         }
 
         public async Task StartCollectingStatisticsAsync()
         {
-            var serverStatisticsConfigSection = _configuration.GetSection("ServerStatisticsConfig");
-            int samplingIntervalSeconds = int.Parse(serverStatisticsConfigSection["SamplingIntervalSeconds"]);
+            int samplingIntervalSeconds = int.Parse(_environmentVariableProvider.GetConfigValue("SamplingIntervalSeconds") ?? "60");
             while (true)
             {
                 var serverStatistics = new ServerStatistics
@@ -38,6 +41,7 @@ namespace ServerStatisticsCollectionService
                 await Task.Delay(samplingIntervalSeconds * 1000);
             }
         }
+
 
         private double GetMemoryUsage()
         {
@@ -75,10 +79,10 @@ namespace ServerStatisticsCollectionService
 
         private void PublishMessage(ServerStatistics serverStatistics)
         {
-            var serverStatisticsConfigSection = _configuration.GetSection("ServerStatisticsConfig");
-            string serverIdentifier = serverStatisticsConfigSection["ServerIdentifier"];
+            string serverIdentifier = _environmentVariableProvider.GetConfigValue("ServerIdentifier");
             string jsonString = _parser.ServerStatisticsToJson(serverStatistics, serverIdentifier);
             _messageQueue.Publish(jsonString);
         }
     }
 }
+

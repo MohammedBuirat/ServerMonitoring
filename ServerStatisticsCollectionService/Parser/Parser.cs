@@ -17,6 +17,7 @@ namespace ServerStatisticsCollectionService.Parser
             var jsonData = new JObject();
             jsonData[serverIdentifier] = JToken.Parse(serverStatisticsJson);
             string jsonString = jsonData.ToString();
+            Console.WriteLine(jsonString);
             return jsonString;
         }
     }

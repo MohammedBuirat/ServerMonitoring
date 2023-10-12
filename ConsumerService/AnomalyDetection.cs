@@ -1,11 +1,6 @@
 ﻿using ConsumerService.Entities;
 using ConsumerService.Repositories;
 using Microsoft.Extensions.Configuration;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ConsumerService
 {
@@ -16,20 +11,16 @@ namespace ConsumerService
         private readonly double cpuUsageAnomalyThreshold;
         private readonly double memoryUsageThreshold;
         private readonly double cpuUsageThreshold;
+        private readonly GetEnvironmentVariable _getEnvironmentVariable;
 
         public AnomalyDetection(IConfiguration configuration, IServerStatisticsRepository serverStatisticsRepository)
         {
+            _getEnvironmentVariable = new GetEnvironmentVariable(configuration);
             _serverStatisticsRepository = serverStatisticsRepository;
-
-            var anomalyDetectionConfigSection = configuration.GetSection("AnomalyDetectionConfig");
-            memoryUsageAnomalyThreshold = double.Parse(anomalyDetectionConfigSection["MemoryUsageAnomalyThresholdPercentage"]);
-            cpuUsageAnomalyThreshold = double.Parse(anomalyDetectionConfigSection["CpuUsageAnomalyThresholdPercentage"]);
-            memoryUsageThreshold = double.Parse(anomalyDetectionConfigSection["MemoryUsageThresholdPercentage"]);
-            cpuUsageThreshold = double.Parse(anomalyDetectionConfigSection["CpuUsageThresholdPercentage"]);
-
-            var mongoConfigSection = configuration.GetSection("MongoDBConfig");
-            string connectionString = mongoConfigSection["ConnectionString"];
-            string databaseName = mongoConfigSection["DatabaseName"];
+            memoryUsageAnomalyThreshold = double.Parse(_getEnvironmentVariable.GetConfigValue("MemoryUsageAnomalyThresholdPercentage"));
+            cpuUsageAnomalyThreshold = double.Parse(_getEnvironmentVariable.GetConfigValue("CpuUsageAnomalyThresholdPercentage"));
+            memoryUsageThreshold = double.Parse(_getEnvironmentVariable.GetConfigValue("MemoryUsageThresholdPercentage"));
+            cpuUsageThreshold = double.Parse(_getEnvironmentVariable.GetConfigValue("CpuUsageThresholdPercentage"));
         }
 
         public void DetectAnomaly(ServerStatistics serverStatistics)

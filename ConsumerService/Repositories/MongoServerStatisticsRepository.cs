@@ -9,13 +9,14 @@ namespace ConsumerService.Repositories
     {
         private readonly IMongoCollection<ServerStatistics> _collection;
         private readonly IMongoCollection<ServerStat> _insertCollection;
+        private readonly GetEnvironmentVariable _getEnvironmentVariable;
 
         public MongoServerStatisticsRepository(IConfiguration configuration)
         {
-            var mongoConfigSection = configuration.GetSection("MongoDBConfig");
-            string connectionString = mongoConfigSection["ConnectionString"];
-            string databaseName = mongoConfigSection["DatabaseName"];
-            string collectionName = "ServerStatistics";
+            _getEnvironmentVariable = new GetEnvironmentVariable(configuration);
+            string connectionString = _getEnvironmentVariable.GetConfigValue("MongoDBConnectionString");
+            string databaseName = _getEnvironmentVariable.GetConfigValue("MongoDBDatabaseName");
+            string collectionName = _getEnvironmentVariable.GetConfigValue("MongoServerStatCollection");
 
             var client = new MongoClient(connectionString);
             var database = client.GetDatabase(databaseName);
