@@ -1,14 +1,19 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using ConsumerService.Repositories;
+using Microsoft.Extensions.Configuration;
+using ConsumerService.Entities;
+
 namespace ConsumerService
 {
     public class Program
     {
         static async Task Main(string[] args)
-        {
+        { 
             IConfiguration configuration = GetConfiguration();
             string hostName = "localhost";
             string queueName = "StatMessages";
-            var messageConsumer = new ConsumeMessages(configuration, hostName, queueName);
+            IServerStatisticsRepository serverStatisticsRepository = new MongoServerStatisticsRepository(configuration);
+            AnomalyDetection anomalyDetection = new AnomalyDetection(configuration, serverStatisticsRepository);
+            var messageConsumer = new ConsumeMessages(anomalyDetection, serverStatisticsRepository, configuration, hostName, queueName);
             await messageConsumer.StartConsumingAsync();
         }
 
