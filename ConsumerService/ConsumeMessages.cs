@@ -13,6 +13,7 @@ namespace ConsumerService
     {
         private readonly string _hostName;
         private readonly string _queueName;
+        private readonly IConfiguration _configuration;
         private readonly Parsers _parser;
         private readonly IServerStatisticsRepository _serverStatisticsRepository;
         private readonly AnomalyDetection _anomalyDetection;
@@ -22,6 +23,7 @@ namespace ConsumerService
             _serverStatisticsRepository = serverStatisticsRepository;
             _hostName = hostName;
             _queueName = queueName;
+            _configuration = configuration;
             _parser = new Parsers();
             _anomalyDetection = anomalyDetection;
         }
