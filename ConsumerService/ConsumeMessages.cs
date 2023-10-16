@@ -2,7 +2,6 @@
 using RabbitMQ.Client.Events;
 using System;
 using System.Text;
-using Microsoft.Extensions.Configuration;
 using ConsumerService.Entities;
 using ConsumerService.Parser;
 using ConsumerService.Repositories;
@@ -13,19 +12,18 @@ namespace ConsumerService
     {
         private readonly string _hostName;
         private readonly string _queueName;
-        private readonly IConfiguration _configuration;
         private readonly Parsers _parser;
         private readonly IServerStatisticsRepository _serverStatisticsRepository;
         private readonly AnomalyDetection _anomalyDetection;
 
-        public ConsumeMessages(AnomalyDetection anomalyDetection, IServerStatisticsRepository serverStatisticsRepository, IConfiguration configuration, string hostName, string queueName)
+        public ConsumeMessages(AnomalyDetection anomalyDetection, IServerStatisticsRepository serverStatisticsRepository, GetEnvironmentVariable getEnvironmentVariable)
         {
+            _hostName = getEnvironmentVariable.GetConfigValue("RabbitMessageQueueHostName");
+            _queueName = getEnvironmentVariable.GetConfigValue("RabbitMessageQueueQueueName");
             _serverStatisticsRepository = serverStatisticsRepository;
-            _hostName = hostName;
-            _queueName = queueName;
-            _configuration = configuration;
             _parser = new Parsers();
             _anomalyDetection = anomalyDetection;
+
         }
 
         public async Task StartConsumingAsync()

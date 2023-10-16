@@ -1,5 +1,4 @@
 ﻿using ConsumerService.Entities;
-using Microsoft.Extensions.Configuration;
 using MongoDB.Bson;
 using MongoDB.Driver;
 
@@ -10,12 +9,11 @@ namespace ConsumerService.Repositories
         private readonly IMongoCollection<ServerStatistics> _collection;
         private readonly IMongoCollection<ServerStat> _insertCollection;
 
-        public MongoServerStatisticsRepository(IConfiguration configuration)
+        public MongoServerStatisticsRepository(GetEnvironmentVariable getEnvironmentVariable)
         {
-            var mongoConfigSection = configuration.GetSection("MongoDBConfig");
-            string connectionString = mongoConfigSection["ConnectionString"];
-            string databaseName = mongoConfigSection["DatabaseName"];
-            string collectionName = "ServerStatistics";
+            string connectionString = getEnvironmentVariable.GetConfigValue("MongoDBConfig.ConnectionString");
+            string databaseName = getEnvironmentVariable.GetConfigValue("MongoDBConfig.DatabaseName");
+            string collectionName = getEnvironmentVariable.GetConfigValue("MongoDBConfig.ServerStatisticsCollection");
 
             var client = new MongoClient(connectionString);
             var database = client.GetDatabase(databaseName);

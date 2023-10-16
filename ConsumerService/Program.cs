@@ -1,6 +1,8 @@
 ﻿using ConsumerService.Repositories;
 using Microsoft.Extensions.Configuration;
 using ConsumerService.Entities;
+using ConsumerService.MessageQueues;
+using ServerStatisticsCollectionService.MessageQueues;
 
 namespace ConsumerService
 {
@@ -11,9 +13,10 @@ namespace ConsumerService
             IConfiguration configuration = GetConfiguration();
             string hostName = "localhost";
             string queueName = "StatMessages";
-            IServerStatisticsRepository serverStatisticsRepository = new MongoServerStatisticsRepository(configuration);
-            AnomalyDetection anomalyDetection = new AnomalyDetection(configuration, serverStatisticsRepository);
-            var messageConsumer = new ConsumeMessages(anomalyDetection, serverStatisticsRepository, configuration, hostName, queueName);
+            var getEnviornmentVariables = new GetEnvironmentVariable(configuration);
+            IServerStatisticsRepository serverStatisticsRepository = new MongoServerStatisticsRepository(getEnviornmentVariables);
+            AnomalyDetection anomalyDetection = new AnomalyDetection(getEnviornmentVariables, serverStatisticsRepository);
+            var messageConsumer = new ConsumeMessages(anomalyDetection, serverStatisticsRepository, getEnviornmentVariables);
             await messageConsumer.StartConsumingAsync();
         }
 

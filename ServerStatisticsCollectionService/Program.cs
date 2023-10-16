@@ -7,10 +7,9 @@ namespace ServerStatisticsCollectionService
         static async Task Main(string[] args)
         {
             IConfiguration configuration = GetConfiguration();
-            string hostName = "localhost";
-            string queueName = "StatMessages";
-            IMessageQueue messageQueue = new RabbitMQMessageQueue(hostName, queueName);
-            var statCollectionSertvice = new ServerStatCollecting(configuration, messageQueue);
+            GetEnvironmentVariable getEnvironmentVariable = new GetEnvironmentVariable(configuration);
+            IMessageQueue messageQueue = new RabbitMQMessageQueue(getEnvironmentVariable);
+            var statCollectionSertvice = new ServerStatCollecting(getEnvironmentVariable, messageQueue);
             await statCollectionSertvice.StartCollectingStatisticsAsync();
         }
 

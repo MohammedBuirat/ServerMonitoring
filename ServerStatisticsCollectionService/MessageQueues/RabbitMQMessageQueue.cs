@@ -8,10 +8,11 @@ namespace ServerStatisticsCollectionService.MessageQueues
         private readonly ConnectionFactory _factory;
         private readonly string _queueName;
 
-        public RabbitMQMessageQueue(string hostName, string queueName)
+        public RabbitMQMessageQueue(GetEnvironmentVariable envVariable)
         {
+            string hostName = envVariable.GetConfigValue("MessageQueueHostName") ?? "localhost";
+            _queueName = envVariable.GetConfigValue("MessageQueueQueueName") ?? "Tset queue";
             _factory = new ConnectionFactory() { HostName = hostName };
-            _queueName = queueName;
         }
 
         public void Publish(string serverStatisticsMessage)

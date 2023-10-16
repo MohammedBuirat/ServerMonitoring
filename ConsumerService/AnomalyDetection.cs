@@ -1,6 +1,5 @@
 ﻿using ConsumerService.Entities;
 using ConsumerService.Repositories;
-using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,19 +16,17 @@ namespace ConsumerService
         private readonly double memoryUsageThreshold;
         private readonly double cpuUsageThreshold;
 
-        public AnomalyDetection(IConfiguration configuration, IServerStatisticsRepository serverStatisticsRepository)
+        public AnomalyDetection(GetEnvironmentVariable getEnvironmentVariable, IServerStatisticsRepository serverStatisticsRepository)
         {
             _serverStatisticsRepository = serverStatisticsRepository;
 
-            var anomalyDetectionConfigSection = configuration.GetSection("AnomalyDetectionConfig");
-            memoryUsageAnomalyThreshold = double.Parse(anomalyDetectionConfigSection["MemoryUsageAnomalyThresholdPercentage"]);
-            cpuUsageAnomalyThreshold = double.Parse(anomalyDetectionConfigSection["CpuUsageAnomalyThresholdPercentage"]);
-            memoryUsageThreshold = double.Parse(anomalyDetectionConfigSection["MemoryUsageThresholdPercentage"]);
-            cpuUsageThreshold = double.Parse(anomalyDetectionConfigSection["CpuUsageThresholdPercentage"]);
+            memoryUsageAnomalyThreshold = double.Parse(getEnvironmentVariable.GetConfigValue("MemoryUsageAnomalyThresholdPercentage"));
+            cpuUsageAnomalyThreshold = double.Parse(getEnvironmentVariable.GetConfigValue("CpuUsageAnomalyThresholdPercentage"));
+            memoryUsageThreshold = double.Parse(getEnvironmentVariable.GetConfigValue("MemoryUsageThresholdPercentage"));
+            cpuUsageThreshold = double.Parse(getEnvironmentVariable.GetConfigValue("CpuUsageThresholdPercentage"));
 
-            var mongoConfigSection = configuration.GetSection("MongoDBConfig");
-            string connectionString = mongoConfigSection["ConnectionString"];
-            string databaseName = mongoConfigSection["DatabaseName"];
+            string connectionString = getEnvironmentVariable.GetConfigValue("ConnectionString");
+            string databaseName = getEnvironmentVariable.GetConfigValue("DatabaseName");
         }
 
         public void DetectAnomaly(ServerStatistics serverStatistics)

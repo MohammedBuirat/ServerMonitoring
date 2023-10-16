@@ -1,5 +1,4 @@
 ﻿using ServerStatisticsCollectionService.Entities;
-using Microsoft.Extensions.Configuration;
 using System.Management;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
@@ -11,20 +10,20 @@ namespace ServerStatisticsCollectionService
 {
     public class ServerStatCollecting
     {
-        private readonly IConfiguration _configuration;
+        private readonly GetEnvironmentVariable _getEnvironmentVariable;
         private readonly IMessageQueue _messageQueue;
         private readonly Parsers _parser;
-        public ServerStatCollecting(IConfiguration configuration, IMessageQueue iMessageQueue)
+        public ServerStatCollecting(GetEnvironmentVariable getEnvironmentVariable, IMessageQueue iMessageQueue)
         {
             _messageQueue = iMessageQueue;
-            _configuration = configuration;
+            _getEnvironmentVariable = getEnvironmentVariable;
             _parser = new Parsers();
         }
 
         public async Task StartCollectingStatisticsAsync()
         {
-            var serverStatisticsConfigSection = _configuration.GetSection("ServerStatisticsConfig");
-            int samplingIntervalSeconds = int.Parse(serverStatisticsConfigSection["SamplingIntervalSeconds"]);
+
+            int samplingIntervalSeconds = int.Parse(_getEnvironmentVariable.GetConfigValue("SamplingIntervalSeconds"));
             while (true)
             {
                 var serverStatistics = new ServerStatistics
@@ -75,10 +74,10 @@ namespace ServerStatisticsCollectionService
 
         private void PublishMessage(ServerStatistics serverStatistics)
         {
-            var serverStatisticsConfigSection = _configuration.GetSection("ServerStatisticsConfig");
-            string serverIdentifier = serverStatisticsConfigSection["ServerIdentifier"];
+            string serverIdentifier = _getEnvironmentVariable.GetConfigValue("ServerIdentifier");
             string jsonString = _parser.ServerStatisticsToJson(serverStatistics, serverIdentifier);
             _messageQueue.Publish(jsonString);
+            Console.Write(jsonString);
         }
     }
 }
