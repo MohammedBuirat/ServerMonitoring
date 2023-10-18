@@ -35,12 +35,13 @@ docker-compose up --build
 **Collection Name:** ServerStatistics
 Ensure you create the ServerMonitoring database and the ServerStatistics collection in MongoDB before running the services to allow the Consumer Service to store processed data correctly.
 
-##Accessing Services
+## Accessing Services
 - **Server Statistics Collection Service API**: http://localhost:5000
 - **Consumer Service API**: http://localhost:5001
 - **RabbitMQ Management Interface:** http://localhost:8080 (username: guest, password: guest)
 - **Mongo Express**: http://localhost:8081 (username: admin, password: password)
-##What I Learned
+  
+## What I Learned
 **In this project, I gained valuable experience in the following areas:**
 
 - **Containerization and Orchestration**: Utilized Docker for containerization and Docker Compose for orchestrating multiple services and their dependencies.
