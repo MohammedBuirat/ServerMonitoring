@@ -28,23 +28,24 @@ Welcome to the Server Statistics Collection and Processing Service repository! T
 
 
 docker-compose up --build
-##This command builds the services and starts the containers as defined in the docker-compose.yaml file.
+## This command builds the services and starts the containers as defined in the docker-compose.yaml file.
 
 ## Create Database and Collection (MongoDB)
 **Database Name:** ServerMonitoring
 **Collection Name:** ServerStatistics
 Ensure you create the ServerMonitoring database and the ServerStatistics collection in MongoDB before running the services to allow the Consumer Service to store processed data correctly.
 
-### Accessing Services
+##Accessing Services
 - **Server Statistics Collection Service API**: http://localhost:5000
-- **Consumer Service API: http://localhost**:5001
+- **Consumer Service API**: http://localhost:5001
 - **RabbitMQ Management Interface:** http://localhost:8080 (username: guest, password: guest)
 - **Mongo Express**: http://localhost:8081 (username: admin, password: password)
-## What I Learned
+##What I Learned
 **In this project, I gained valuable experience in the following areas:**
 
-**Containerization and Orchestration**: Utilized Docker for containerization and Docker Compose for orchestrating multiple services and their dependencies.
-**Message Queue Implementation**: Implemented asynchronous communication between services using RabbitMQ, enabling efficient data exchange.
-**NoSQL Database Integration**: Integrated MongoDB as the database for storing and retrieving server statistics data.
-**Troubleshooting and Debugging**: Developed skills in troubleshooting issues related to containerized applications and learned to debug problems efficiently.
+- **Containerization and Orchestration**: Utilized Docker for containerization and Docker Compose for orchestrating multiple services and their dependencies.
+- **Message Queue Implementation**: Implemented asynchronous communication between services using RabbitMQ, enabling efficient data exchange.
+- **NoSQL Database Integration**: Integrated MongoDB as the database for storing and retrieving server statistics data.
+- **Troubleshooting and Debugging**: Developed skills in troubleshooting issues related to containerized applications and learned to debug problems efficiently.
+
 Feel free to explore the code and the configurations in this repository to understand how the services are implemented and how they interact with each other.
