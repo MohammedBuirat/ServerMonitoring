@@ -11,13 +11,12 @@ namespace ConsumerService
         static async Task Main(string[] args)
         { 
             IConfiguration configuration = GetConfiguration();
-            string hostName = "localhost";
-            string queueName = "StatMessages";
             var getEnviornmentVariables = new GetEnvironmentVariable(configuration);
             IServerStatisticsRepository serverStatisticsRepository = new MongoServerStatisticsRepository(getEnviornmentVariables);
             AnomalyDetection anomalyDetection = new AnomalyDetection(getEnviornmentVariables, serverStatisticsRepository);
-            var messageConsumer = new ConsumeMessages(anomalyDetection, serverStatisticsRepository, getEnviornmentVariables);
-            await messageConsumer.StartConsumingAsync();
+            var messageConsumer = new ConsumeMessages(anomalyDetection, serverStatisticsRepository);
+            IMessageQueue messageQueue = new RabbitMQMessageQueue(getEnviornmentVariables, messageConsumer);
+            messageQueue.ConsumeAsync();
         }
 
         static IConfiguration GetConfiguration()

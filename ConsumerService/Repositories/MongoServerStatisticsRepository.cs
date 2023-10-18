@@ -11,9 +11,9 @@ namespace ConsumerService.Repositories
 
         public MongoServerStatisticsRepository(GetEnvironmentVariable getEnvironmentVariable)
         {
-            string connectionString = getEnvironmentVariable.GetConfigValue("MongoDBConfig.ConnectionString");
-            string databaseName = getEnvironmentVariable.GetConfigValue("MongoDBConfig.DatabaseName");
-            string collectionName = getEnvironmentVariable.GetConfigValue("MongoDBConfig.ServerStatisticsCollection");
+            string connectionString = getEnvironmentVariable.GetConfigValue("MongoDBConfigConnectionString");
+            string databaseName = getEnvironmentVariable.GetConfigValue("MongoDBConfigDatabaseName");
+            string collectionName = getEnvironmentVariable.GetConfigValue("MongoDBConfigServerStatisticsCollection");
 
             var client = new MongoClient(connectionString);
             var database = client.GetDatabase(databaseName);

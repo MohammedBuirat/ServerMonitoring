@@ -10,9 +10,12 @@ namespace ServerStatisticsCollectionService.MessageQueues
 
         public RabbitMQMessageQueue(GetEnvironmentVariable envVariable)
         {
-            string hostName = envVariable.GetConfigValue("MessageQueueHostName") ?? "localhost";
-            _queueName = envVariable.GetConfigValue("MessageQueueQueueName") ?? "Tset queue";
-            _factory = new ConnectionFactory() { HostName = hostName };
+            string hostName = envVariable.GetConfigValue("RabbitMessageQueueConnection");
+            _queueName = envVariable.GetConfigValue("RabbitMessageQueueQueueName");
+            _factory = new ConnectionFactory()
+            {
+                HostName = hostName,
+            };
         }
 
         public void Publish(string serverStatisticsMessage)
@@ -20,10 +23,20 @@ namespace ServerStatisticsCollectionService.MessageQueues
             using (var connection = _factory.CreateConnection())
             using (var channel = connection.CreateModel())
             {
-                channel.QueueDeclare(queue: _queueName, durable: false, exclusive: false, autoDelete: false, arguments: null);
+                channel.QueueDeclare(queue: _queueName,
+                                     durable: false,
+                                     exclusive: false,
+                                     autoDelete: false,
+                                     arguments: null);
 
                 var body = Encoding.UTF8.GetBytes(serverStatisticsMessage);
-                channel.BasicPublish(exchange: "", routingKey: _queueName, basicProperties: null, body: body);
+
+                channel.BasicPublish(exchange: "",
+                                     routingKey: _queueName,
+                                     basicProperties: null,
+                                     body: body);
+
+                Console.WriteLine($"Sent: {serverStatisticsMessage}");
             }
         }
     }

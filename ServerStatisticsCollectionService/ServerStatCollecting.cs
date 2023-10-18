@@ -5,6 +5,7 @@ using Newtonsoft.Json;
 using ServerStatisticsCollectionService.MessageQueues;
 using System.Diagnostics;
 using ServerStatisticsCollectionService.Parser;
+using System.Runtime.InteropServices;
 
 namespace ServerStatisticsCollectionService
 {
@@ -43,32 +44,113 @@ namespace ServerStatisticsCollectionService
             return System.Diagnostics.Process.GetCurrentProcess().WorkingSet64 / (1024.0 * 1024.0);
         }
 
-        private double GetAvailableMemory()
+        public double GetAvailableMemory()
         {
-            ObjectQuery wql = new ObjectQuery("SELECT * FROM Win32_OperatingSystem");
-            ManagementObjectSearcher searcher = new ManagementObjectSearcher(wql);
-            ManagementObjectCollection results = searcher.Get();
-
-            foreach (ManagementObject result in results)
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                ulong totalVisibleMemoryKB = Convert.ToUInt64(result["TotalVisibleMemorySize"]);
-                ulong freePhysicalMemoryKB = Convert.ToUInt64(result["FreePhysicalMemory"]);
+                try
+                {
+                    ObjectQuery wql = new ObjectQuery("SELECT * FROM Win32_OperatingSystem");
+                    ManagementObjectSearcher searcher = new ManagementObjectSearcher(wql);
+                    ManagementObjectCollection results = searcher.Get();
 
-                double totalAvailableMemoryMB = (double)(totalVisibleMemoryKB - freePhysicalMemoryKB) / 1024.0;
-                return totalAvailableMemoryMB;
+                    foreach (ManagementObject result in results)
+                    {
+                        ulong totalVisibleMemoryKB = Convert.ToUInt64(result["TotalVisibleMemorySize"]);
+                        ulong freePhysicalMemoryKB = Convert.ToUInt64(result["FreePhysicalMemory"]);
+
+                        double totalAvailableMemoryMB = (double)(totalVisibleMemoryKB - freePhysicalMemoryKB) / 1024.0;
+                        return totalAvailableMemoryMB;
+                    }
+                    return 0.0;
+                }
+                catch (PlatformNotSupportedException)
+                {
+                    return 0.0;
+                }
             }
-            return 0.0;
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                try
+                {
+                    string memInfoFilePath = "/proc/meminfo";
+                    string memInfo = File.ReadAllText(memInfoFilePath);
+
+                    var availableMemoryLine = memInfo
+                        .Split('\n')
+                        .FirstOrDefault(line => line.StartsWith("MemAvailable:", StringComparison.OrdinalIgnoreCase));
+
+                    if (availableMemoryLine != null)
+                    {
+                        var availableMemoryInKB = long.Parse(availableMemoryLine
+                            .Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries)[1]);
+
+                        return availableMemoryInKB / 1024.0;
+                    }
+
+                    return 0.0;
+                }
+                catch (Exception ex)
+                {
+                    throw new InvalidOperationException("Failed to retrieve available memory information on Linux.", ex);
+                }
+            }
+            else
+            {
+                throw new PlatformNotSupportedException("Unsupported platform.");
+            }
         }
 
-        private double GetCpuUsage()
+        public double GetCpuUsage()
         {
-            using (PerformanceCounter cpuCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total"))
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                cpuCounter.NextValue();
-                System.Threading.Thread.Sleep(1000);
-                double cpuUsage = cpuCounter.NextValue();
+                using (PerformanceCounter cpuCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total"))
+                {
+                    cpuCounter.NextValue();
+                    System.Threading.Thread.Sleep(1000);
+                    double cpuUsage = cpuCounter.NextValue();
 
-                return cpuUsage;
+                    return cpuUsage;
+                }
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                try
+                {
+                    string procStatFilePath = "/proc/stat";
+                    string[] lines = File.ReadAllLines(procStatFilePath);
+
+                    // Find the line that starts with "cpu"
+                    string cpuLine = lines.FirstOrDefault(line => line.StartsWith("cpu "));
+
+                    if (cpuLine != null)
+                    {
+                        string[] values = cpuLine.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+
+                        // Parse CPU usage values
+                        ulong user = ulong.Parse(values[1]);
+                        ulong nice = ulong.Parse(values[2]);
+                        ulong system = ulong.Parse(values[3]);
+                        ulong idle = ulong.Parse(values[4]);
+                        ulong total = user + nice + system + idle;
+
+                        // Calculate CPU usage percentage
+                        double cpuUsage = ((double)(total - idle) / total) * 100.0;
+
+                        return cpuUsage;
+                    }
+
+                    return 0.0;
+                }
+                catch (Exception ex)
+                {
+                    return 0.0;
+                }
+            }
+            else
+            {
+                throw new PlatformNotSupportedException("Unsupported platform.");
             }
         }
 
@@ -77,7 +159,6 @@ namespace ServerStatisticsCollectionService
             string serverIdentifier = _getEnvironmentVariable.GetConfigValue("ServerIdentifier");
             string jsonString = _parser.ServerStatisticsToJson(serverStatistics, serverIdentifier);
             _messageQueue.Publish(jsonString);
-            Console.Write(jsonString);
         }
     }
 }

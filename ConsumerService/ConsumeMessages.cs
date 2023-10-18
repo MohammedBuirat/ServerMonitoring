@@ -10,45 +10,24 @@ namespace ConsumerService
 {
     public class ConsumeMessages
     {
-        private readonly string _hostName;
-        private readonly string _queueName;
         private readonly Parsers _parser;
         private readonly IServerStatisticsRepository _serverStatisticsRepository;
         private readonly AnomalyDetection _anomalyDetection;
 
-        public ConsumeMessages(AnomalyDetection anomalyDetection, IServerStatisticsRepository serverStatisticsRepository, GetEnvironmentVariable getEnvironmentVariable)
+        public ConsumeMessages(AnomalyDetection anomalyDetection, IServerStatisticsRepository serverStatisticsRepository)
         {
-            _hostName = getEnvironmentVariable.GetConfigValue("RabbitMessageQueueHostName");
-            _queueName = getEnvironmentVariable.GetConfigValue("RabbitMessageQueueQueueName");
             _serverStatisticsRepository = serverStatisticsRepository;
             _parser = new Parsers();
             _anomalyDetection = anomalyDetection;
 
         }
 
-        public async Task StartConsumingAsync()
+        public async Task StartConsumingAsync(string message)
         {
-            var factory = new ConnectionFactory() { HostName = _hostName };
-            using (var connection = factory.CreateConnection())
-            using (var channel = connection.CreateModel())
-            {
-                channel.QueueDeclare(queue: _queueName, durable: false, exclusive: false, autoDelete: false, arguments: null);
-
-                var consumer = new EventingBasicConsumer(channel);
-                consumer.Received += (model, ea) =>
-                {
-                    ReadOnlyMemory<byte> body = ea.Body.ToArray();
-                    var message = Encoding.UTF8.GetString(body.Span);
-                    var serverStat = _parser.ParseJsonStringToServerStat(message);
-                    _anomalyDetection.DetectAnomaly(serverStat);
-                    _serverStatisticsRepository.InsertServerStatistics(serverStat);
-                    
-                };
-
-
-                channel.BasicConsume(queue: _queueName, autoAck: true, consumer: consumer);
-                Console.ReadLine();
-            }
+            var serverStat = _parser.ParseJsonStringToServerStat(message);
+            _anomalyDetection.DetectAnomaly(serverStat);
+            _serverStatisticsRepository.InsertServerStatistics(serverStat);
         }
     }
 }
+

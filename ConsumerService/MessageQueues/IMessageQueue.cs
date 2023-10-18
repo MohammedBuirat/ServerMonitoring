@@ -8,7 +8,7 @@ namespace ConsumerService.MessageQueues
 {
     public interface IMessageQueue
     {
-        public Task<string> ConsumeAsync();
+        public Task ConsumeAsync();
 
     }
 }

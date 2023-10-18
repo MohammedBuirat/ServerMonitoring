@@ -1,9 +1,10 @@
-﻿using ConsumerService;
-using ConsumerService.MessageQueues;
+﻿using ConsumerService.MessageQueues;
+using ConsumerService;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace ServerStatisticsCollectionService.MessageQueues
 {
@@ -11,44 +12,46 @@ namespace ServerStatisticsCollectionService.MessageQueues
     {
         private readonly ConnectionFactory _factory;
         private readonly string _queueName;
+        private readonly ConsumeMessages _consumeMessages;
 
-        public RabbitMQMessageQueue(GetEnvironmentVariable envVariable)
+        public RabbitMQMessageQueue(GetEnvironmentVariable envVariable, ConsumeMessages consumeMessages)
         {
-            string hostName = envVariable.GetConfigValue("RabbitMessageQueueHostName");
+            _consumeMessages = consumeMessages;
+            string hostName = envVariable.GetConfigValue("RabbitMessageQueueConnection");
             _queueName = envVariable.GetConfigValue("RabbitMessageQueueQueueName");
-            string password = envVariable.GetConfigValue("RabbitMessageQueuePassword") ?? "guest";
-            string userName = envVariable.GetConfigValue("guest") ?? "guest";
-            int port = int.Parse(envVariable.GetConfigValue("RabbitMessageQueuePort"));
             _factory = new ConnectionFactory()
             {
-                HostName = hostName,
+                HostName = hostName
             };
         }
 
-        public async Task<string> ConsumeAsync()
+        public async Task ConsumeAsync()
         {
-            var tcs = new TaskCompletionSource<string>();
-
-            using (var connection = _factory.CreateConnection())
-            using (var channel = connection.CreateModel())
+            while (true)
             {
-                channel.QueueDeclare(queue: _queueName, durable: false, exclusive: false, autoDelete: false, arguments: null);
-
-                var consumer = new AsyncEventingBasicConsumer(channel);
-
-                consumer.Received += async (model, ea) =>
+                using (var connection = _factory.CreateConnection())
+                using (var channel = connection.CreateModel())
                 {
-                    var body = ea.Body.ToArray();
-                    var consumedMessage = Encoding.UTF8.GetString(body);
-                    tcs.SetResult(consumedMessage);
-                };
+                    channel.QueueDeclare(queue: _queueName,
+                                         durable: false,
+                                         exclusive: false,
+                                         autoDelete: false,
+                                         arguments: null);
 
-                await Task.Run(() => channel.BasicConsume(queue: _queueName, autoAck: true, consumer: consumer));
+                    var consumer = new EventingBasicConsumer(channel);
+                    consumer.Received += async (model, ea) =>
+                    {
+                        var body = ea.Body.ToArray();
+                        var message = Encoding.UTF8.GetString(body);
+                        await _consumeMessages.StartConsumingAsync(message);
+                    };
+
+                    channel.BasicConsume(queue: _queueName,
+                                         autoAck: true,
+                                         consumer: consumer);
+                    Console.ReadLine();
+                }
             }
-
-            return await tcs.Task;
         }
-
     }
 }
-

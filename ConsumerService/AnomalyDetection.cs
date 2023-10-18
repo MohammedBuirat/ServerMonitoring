@@ -32,6 +32,10 @@ namespace ConsumerService
         public void DetectAnomaly(ServerStatistics serverStatistics)
         {
             ServerStatistics previousServerStatistics = _serverStatisticsRepository.GetLastInsertedServerStatistics();
+            if (previousServerStatistics == null)
+            {
+                previousServerStatistics = serverStatistics;
+            }
             bool memoryUsageAnomaly = serverStatistics.MemoryUsage > (previousServerStatistics.MemoryUsage * (1 + memoryUsageAnomalyThreshold));
             bool cpuUsageAnomaly = serverStatistics.CpuUsage > (previousServerStatistics.CpuUsage * (1 + cpuUsageAnomalyThreshold));
 
@@ -48,8 +52,6 @@ namespace ConsumerService
             {
                 Console.WriteLine($"High Usage Alert - Memory High Usage: {memoryHighUsageAlert}, CPU High Usage: {cpuHighUsageAlert}");
             }
-
-            _serverStatisticsRepository.InsertServerStatistics(serverStatistics);
         }
     }
 }
