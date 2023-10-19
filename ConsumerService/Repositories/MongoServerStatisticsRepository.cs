@@ -7,7 +7,6 @@ namespace ConsumerService.Repositories
     public class MongoServerStatisticsRepository : IServerStatisticsRepository
     {
         private readonly IMongoCollection<ServerStatistics> _collection;
-        private readonly IMongoCollection<ServerStat> _insertCollection;
 
         public MongoServerStatisticsRepository(GetEnvironmentVariable getEnvironmentVariable)
         {
@@ -18,20 +17,14 @@ namespace ConsumerService.Repositories
             var client = new MongoClient(connectionString);
             var database = client.GetDatabase(databaseName);
             _collection = database.GetCollection<ServerStatistics>(collectionName);
-            _insertCollection = database.GetCollection<ServerStat>(collectionName);
         }
 
         public void InsertServerStatistics(ServerStatistics serverStatistics)
         {
             try
             {
-                ServerStat serverStat = new ServerStat();
-                serverStat.AvailableMemory = serverStatistics.AvailableMemory;
-                serverStat.CpuUsage = serverStatistics.CpuUsage;
-                serverStat.MemoryUsage = serverStatistics.MemoryUsage;
-                serverStat.ServerIdentifier = serverStatistics.ServerIdentifier;
-                serverStat.Timestamp = serverStatistics.Timestamp;
-                _insertCollection.InsertOne(serverStat);
+
+                _collection.InsertOne(serverStatistics);
                 Console.WriteLine("Server statistics inserted into MongoDB.");
             }
             catch (Exception ex)
